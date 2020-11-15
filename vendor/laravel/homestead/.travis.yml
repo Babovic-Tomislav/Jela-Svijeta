@@ -1,0 +1,16 @@
+language: php
+
+php:
+  - 7.4
+  - nightly
+
+before_script:
+  - phpenv config-rm xdebug.ini || true
+  - composer update --no-interaction
+
+script:
+  - vendor/bin/phpunit
+
+matrix:
+  allow_failures:
+    - php: nightly
