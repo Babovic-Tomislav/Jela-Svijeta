@@ -1,5 +1,5 @@
 Jela svijeta application that shows meals depending on parameters in url.
-
+```sh
 #Parameters can be
 #lang(required),
 #with(optional, valuse - tags,category,ingredients)
@@ -8,3 +8,4 @@ Jela svijeta application that shows meals depending on parameters in url.
 #per_page(optional, meals per page)
 #page(optional, page number))
 #diff_time(optional, UNIX timestamp to filter our meals that are created,updated or deleted after that stamp) 
+```
