@@ -7,7 +7,7 @@ keys:
     - c:/Users/Mi\.ssh/id_rsa
 folders:
     -
-        map: 'C:\Users\Mi\Documents\Factory_Backend_Zadatak\Jela_Svijeta'
+        map: 'C:\Users\Mi\Documents\Jela_Svijeta'
         to: /home/vagrant/code
 sites:
     -

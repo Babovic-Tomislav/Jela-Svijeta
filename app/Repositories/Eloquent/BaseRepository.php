@@ -2,21 +2,20 @@
 
 namespace App\Repositories\Eloquent;
 
-
 use App\Repositories\EloquentRepositoryInterface;
 use Illuminate\Database\Eloquent\Model;
 
 class BaseRepository implements EloquentRepositoryInterface
 {
-    /**      
-     * @var Model      
+    /**
+     * @var Model
      */
     protected $model;
 
-    /**      
-     * BaseRepository constructor.      
-     *      
-     * @param Model $model      
+    /**
+     * BaseRepository constructor.
+     *
+     * @param Model $model
      */
     public function __construct(Model $model)
     {
@@ -35,6 +34,7 @@ class BaseRepository implements EloquentRepositoryInterface
 
     /**
      * @param $id
+     *
      * @return Model
      */
     public function find($id): ?Model
@@ -42,4 +42,3 @@ class BaseRepository implements EloquentRepositoryInterface
         return $this->model->find($id);
     }
 }
-?>

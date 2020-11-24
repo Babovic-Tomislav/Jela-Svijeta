@@ -8,26 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ingredients extends Model
 {
-
     use Translatable;
     use HasFactory;
+
     public $timestamps = false;
-    protected $fillable = [
-        'title'
-    ];
+    protected $fillable = ['title'];
 
     public $translatedAttributes = ['title'];
-
-
 
     public function meals()
     {
         return $this->belongsToMany(Meals::class);
     }
-}
-
-class IngredientsTranslation extends Model
-{
-    public $timestamps = false;
-    protected $hidden = ['locale'];
 }

@@ -13,21 +13,26 @@ class CreatecategoryTable extends Migration
      */
     public function up()
     {
-        Schema::create('category', function (Blueprint $table) {
-            $table->id();
-   
-            $table->string("slug");
-        });
+        Schema::create(
+            'category',
+            function (Blueprint $table) {
+                $table->id();
+                $table->string("slug");
+            }
+        );
 
-        Schema::create('category_translations', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('category_id');
-            $table->string("title");
-            $table->string('locale');
-
-            $table->unique(['category_id', 'locale']);
-            $table->foreign('category_id')->references('id')->on('category')->onDelete('cascade');
-        });
+        Schema::create(
+            'category_translations',
+            function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('category_id');
+                $table->string("title");
+                $table->string('locale');
+                $table->unique(['category_id', 'locale']);
+                $table->foreign('category_id')->references('id')->on('category')
+                    ->onDelete('cascade');
+            }
+        );
     }
 
     /**
@@ -37,6 +42,7 @@ class CreatecategoryTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('category_translations','category');
+        Schema::dropIfExists('category_translations');
+        Schema::dropIfExists('category');
     }
 }

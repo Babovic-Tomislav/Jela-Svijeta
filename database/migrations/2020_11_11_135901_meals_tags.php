@@ -13,20 +13,22 @@ class MealsTags extends Migration
      */
     public function up()
     {
-        Schema::create('meals_tags', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger("meals_id");
-            $table->foreign('meals_id')
-                ->references('id')
-                ->on('meals')->onDelete('cascade');
-
-            $table->unsignedBigInteger("tags_id");
-            $table->foreign('tags_id')
-                ->references('id')
-                ->on('tags')->onDelete('cascade');
-            $table->dropPrimary();
-            $table->primary(['meals_id','tags_id']);
-        });
+        Schema::create(
+            'meals_tags',
+            function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger("meals_id");
+                $table->foreign('meals_id')
+                    ->references('id')
+                    ->on('meals')->onDelete('cascade');
+                $table->unsignedBigInteger("tags_id");
+                $table->foreign('tags_id')
+                    ->references('id')
+                    ->on('tags')->onDelete('cascade');
+                $table->dropPrimary();
+                $table->primary(['meals_id', 'tags_id']);
+            }
+        );
     }
 
     /**

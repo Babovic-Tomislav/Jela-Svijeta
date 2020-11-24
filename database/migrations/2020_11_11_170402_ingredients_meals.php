@@ -8,20 +8,22 @@ class IngredientsMeals extends Migration
 {
     public function up()
     {
-        Schema::create('ingredients_meals', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger("meals_id");
-            $table->foreign('meals_id')
-                ->references('id')
-                ->on('meals')->onDelete('cascade');
-
-            $table->unsignedBigInteger("ingredients_id");
-            $table->foreign('ingredients_id')
-                ->references('id')
-                ->on('ingredients')->onDelete('cascade');
+        Schema::create(
+            'ingredients_meals',
+            function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger("meals_id");
+                $table->foreign('meals_id')
+                    ->references('id')
+                    ->on('meals')->onDelete('cascade');
+                $table->unsignedBigInteger("ingredients_id");
+                $table->foreign('ingredients_id')
+                    ->references('id')
+                    ->on('ingredients')->onDelete('cascade');
                 $table->dropPrimary();
-            $table->primary(['ingredients_id','meals_id']);
-        });
+                $table->primary(['ingredients_id', 'meals_id']);
+            }
+        );
     }
 
     /**

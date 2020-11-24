@@ -2,167 +2,212 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Mapper\CategoriesMapper;
-use App\Mapper\IngredientsMapper;
-use App\Mapper\LinkMapper;
-use App\Mapper\MapCollections\IngredientsMappedCollection;
-use App\Mapper\MapCollections\MealsMappedCollection;
-use App\Mapper\MapCollections\TagsMappedCollection;
-use App\Mapper\MealsMapper;
-use App\Mapper\MetaMapper;
-use App\Mapper\OutputMapper;
-use App\Mapper\TagsMapper;
+use App\Mapper\{
+    CategoriesMapper,
+    MapCollections\IngredientsMappedCollection,
+    IngredientsMapper,
+    MapCollections\TagsMappedCollection,
+    TagsMapper,
+    MapCollections\MealsMappedCollection,
+    MealsMapper,
+    LinkMapper,
+    MetaMapper,
+    OutputMapper,
+};
 use App\Models\Meals;
 use App\Repositories\MealsRepositoryInterface;
-use App\Repositories\Eloquent\BaseRepository;
-
 
 class MealsRepository extends BaseRepository implements MealsRepositoryInterface
 {
-
-    private $meals, $tags, $lang = null, $diff_time = 0, $with, $category;
-    private $metaMap = null, $linkMap = null;
-    private $parameters;
+    private string $lang;
+    private ?array $with = null;
+    private ?MetaMapper $metaMap = null;
+    private ?LinkMapper $linkMap = null;
 
     public function __construct(Meals $model)
     {
-        parent::__construct($model);  
+        parent::__construct($model);
     }
 
-    private function makeQuery($param)
+    public function getOutput($param)
     {
-        $query = $this->model->query();
-        $this->parameters = $param;
-        if ($this->parameters['diff_time']) {
-            $this->diff_time = $this->parameters['diff_time'];
-        }
-
-        if ($this->parameters['tags']) {
-            $this->tags = $this->parameters['tags'];
-            $query = $query->with('tags');
-            $tags = $this->tags;
-            foreach ($tags as $tag) {
-                $query->whereHas('tags', function ($q) use ($tag) {
-                    $q->where('tags.id', $tag);
-                });
-            }
-        }
-
-        if($this->parameters['category'])
-        {
-            $this->category = $this->parameters['category'];
-            if($this->category=='!NULL')
-            {
-                $query->has('category');
-            }
-            elseif ($this->category == 'NULL') {
-                $query->doesntHave('category');
-            }
-            else {
-                $category=$this->category;
-                $query->whereHas('category', function ($q) use ($category) {
-                    $q->where('category.id', $category);
-            });
-            }
-        }
-
-        if ($this->parameters['with']) {
-            $this->with = $this->parameters['with'];
-            foreach ($this->with as $with) {
-                $query->with($with);
-            }
-        }
-
-        if ($this->parameters['per_page']) {
-            if ($this->diff_time > 0)
-                $query = $query->withTrashed()->paginate($this->parameters['per_page']);
-            else {
-                $query = $query->paginate($this->parameters['per_page']);
-            }
-
-            $query = $query->appends(request()->except('page'));
-            $this->metaMap = new MetaMapper($query);
-            $this->linkMap = new LinkMapper($query);
-        } else {
-            if ($this->diff_time > 0)
-                $query = $query->withTrashed()->get();
-            else {
-                $query = $query->get();
-            }
-        }
-
-
-
-        if ($this->parameters['lang']) {
-            $this->lang = $this->parameters['lang'];
-        }
-
-        return $query;
-
-    }
-
-    public function getOutput($query)
-    {
-
-        $this->meals = $this->makeQuery($query);
-
-
+        $meals  = $this->makeQuery($param);
         $output = new OutputMapper();
 
         if ($this->metaMap) {
             $output->setLinks($this->linkMap);
             $output->setMeta($this->metaMap);
         }
-
         $mealsCollection = new MealsMappedCollection();
-
-        foreach ($this->meals as $meal) {
-            if ($meal->created_at->toDateTimeString() < $this->diff_time && $meal->updated_at->toDateTimeString() < $this->diff_time )
-                continue;
-            if($meal->deleted_at)
-                if($meal->deleted_at < $this->diff_time)
-                    continue;
-
-            $meal->title = $meal->translate($this->lang)->title;
-            $meal->description = $meal->translate($this->lang)->description;
-            $mealMapper = new MealsMapper($meal->id, $meal->title, $meal->description, $meal->status);
-
-            if ($this->with) {
-                if (in_array('tags', $this->with)) {
-                    $tagCollection = new TagsMappedCollection();
-                    foreach ($meal->tags as $tag) {
-
-                        $tagCollection->addToMap(new TagsMapper($tag->id, $tag->translate($this->lang)->title, $tag->slug));
-                    }
-                    $mealMapper->setTags($tagCollection);
-                };
-
-                if (in_array('category', $this->with) && $meal->category) {
-
-                    $mealMapper->setCategories(new CategoriesMapper(
-                        $meal->category->id,
-                        $meal->category->translate($this->lang)->title,
-                        $meal->category->slug
-                    ));
-                }
-
-                if (in_array('ingredients', $this->with)) {
-                    $ingredientsCollection = new IngredientsMappedCollection();
-                    foreach ($meal->ingredients as $ingredient) {
-                        $ingredientsCollection->addToMap(new IngredientsMapper(
-                            $ingredient->id, 
-                            $ingredient->translate($this->lang)->title, 
-                            $ingredient->slug));
-                    }
-                    $mealMapper->setIngredients($ingredientsCollection);
-                }
-            }
-            $mealsCollection->addToMap($mealMapper);
+        foreach ($meals as $meal) {
+            $mealsCollection->addToMap($this->makeMealCollection($meal));
         }
-        $output->setMeals($mealsCollection);;
-        
+        $output->setMeals($mealsCollection);
+
         return $output;
     }
+
+    private function makeQuery($param)
+    {
+        $query = $this->model->query();
+        if ($param['tags']) {
+            $query = $this->filterByTags($query, $param['tags'],);
+        }
+        if ($param['category']) {
+            $query = $this->filterByCategory($query, $param['category']);
+        }
+        if ($param['with']) {
+            $this->with = $param['with'];
+            $query      = $this->showWith($query, $param['with']);
+        }
+        if ($param['diff_time']) {
+            $query = $this->withDeleted($query, $param['diff_time']);
+        }
+        if ($param['per_page']) {
+            $query         = $this->perPage($query, $param['per_page']);
+            $query         = $query->appends(request()->except('page'));
+            $this->metaMap = new MetaMapper($query);
+            $this->linkMap = new LinkMapper($query);
+        } else {
+            $query = $query->get();
+        }
+        $this->lang = $param['lang'];
+
+        return $query;
+    }
+
+    private function filterByTags($query, $tags)
+    {
+        foreach ($tags as $tag) {
+            $query->whereHas(
+                'tags',
+                function ($q) use ($tag) {
+                    $q->where('tags_id', $tag);
+                }
+            );
+        }
+
+        return $query;
+    }
+
+    private function filterByCategory($query, $category)
+    {
+        if ($category == '!NULL') {
+            $query->has('category');
+        } elseif ($category == 'NULL') {
+            $query->doesntHave('category');
+        } else {
+            $query->whereHas('category')->where('category_id', $category);
+        }
+
+        return $query;
+    }
+
+    private function showWith($query, $with)
+    {
+        foreach ($with as $w) {
+            $query->with($w);
+        }
+
+        return $query;
+    }
+
+    private function withDeleted($query, $time)
+    {
+        if ($time > 0) {
+            return $query->withTrashed()
+                ->where(
+                    function ($q) use ($time) {
+                        $q->where('created_at', '>', $time)
+                            ->orWhere('updated_at', '>', $time)
+                            ->orWhere('deleted_at', '>', $time);
+                    }
+                );
+        }
+
+        return $query;
+    }
+
+    private function perPage($query, $itemNumber)
+    {
+        return $query->paginate($itemNumber);
+    }
+
+    private function makeMealCollection($meal)
+    {
+        $mealMapper = new MealsMapper(
+            $meal->id,
+            $meal->translate($this->lang)->title,
+            $meal->translate($this->lang)->description,
+            $meal->status
+        );
+        if ($this->with) {
+            if (in_array('tags', $this->with)) {
+                $mealMapper->setTags($this->makeTagCollection($meal->tags));
+            }
+            if (in_array('category', $this->with)) {
+                $mealMapper->setCategories(
+                    $this->makeCategoryCollection($meal->category)
+                );
+            }
+            if (in_array('ingredients', $this->with)) {
+                $mealMapper->setIngredients(
+                    $this->makeIngredientsCollection($meal->ingredients)
+                );
+            }
+        }
+
+        return $mealMapper;
+    }
+
+    private function makeTagCollection($tags)
+    {
+        $tagCollection = new TagsMappedCollection();
+        foreach ($tags as $tag) {
+            $tagCollection->addToMap(
+                new TagsMapper(
+                    $tag->id,
+                    $tag->translate($this->lang)->title,
+                    $tag->slug
+                )
+            );
+        }
+
+        return $tagCollection;
+    }
+
+    private function makeCategoryCollection($category)
+    {
+        if ($category) {
+            $categoryForOutput = new CategoriesMapper(
+                $category->id,
+                $category->translate($this->lang)->title,
+                $category->slug
+            );
+        } else {
+            $categoryForOutput = new CategoriesMapper(
+                null,
+                null,
+                null
+            );
+        }
+
+        return $categoryForOutput;
+    }
+
+    private function makeIngredientsCollection($ingredients)
+    {
+        $ingredientsCollection = new IngredientsMappedCollection();
+        foreach ($ingredients as $ingredient) {
+            $ingredientsCollection->addToMap(
+                new IngredientsMapper(
+                    $ingredient->id,
+                    $ingredient->translate($this->lang)->title,
+                    $ingredient->slug
+                )
+            );
+        }
+
+        return $ingredientsCollection;
+    }
 }
-
-

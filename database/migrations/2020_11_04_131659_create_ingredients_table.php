@@ -13,21 +13,27 @@ class CreateIngredientsTable extends Migration
      */
     public function up()
     {
-        Schema::create('ingredients', function (Blueprint $table) {
-            $table->id();
+        Schema::create(
+            'ingredients',
+            function (Blueprint $table) {
+                $table->id();
+                $table->string("slug");
+            }
+        );
 
-            $table->string("slug");
-        });
-
-        Schema::create('ingredients_translations', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('ingredients_id');
-            $table->string("title");
-            $table->string('locale');
-
-            $table->unique(['ingredients_id', 'locale']);
-            $table->foreign('ingredients_id')->references('id')->on('ingredients')->onDelete('cascade');
-        });
+        Schema::create(
+            'ingredients_translations',
+            function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('ingredients_id');
+                $table->string("title");
+                $table->string('locale');
+                $table->unique(['ingredients_id', 'locale']);
+                $table->foreign('ingredients_id')->references('id')->on(
+                    'ingredients'
+                )->onDelete('cascade');
+            }
+        );
     }
 
     /**
@@ -37,7 +43,7 @@ class CreateIngredientsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('ingredients_translations','ingredients');
-        
+        Schema::dropIfExists('ingredients_translations');
+        Schema::dropIfExists('ingredients');
     }
 }

@@ -7,7 +7,6 @@ use JsonSerializable;
 
 class MetaMapper implements JsonSerializable
 {
-
     private int $currentPage;
     private int $totalItems;
     private int $itemsPerPage;
@@ -23,13 +22,11 @@ class MetaMapper implements JsonSerializable
 
     public function jsonSerialize()
     {
-        $output=[
-            'currentPage' => $this->currentPage,
-            'totalItems' => $this->totalItems,
+        return [
+            'currentPage'  => $this->currentPage,
+            'totalItems'   => $this->totalItems,
             'itemsPerPage' => $this->itemsPerPage,
-            'totalPages' => $this->totalPages
+            'totalPages'   => $this->totalPages
         ];
-
-        return $output;
     }
 }

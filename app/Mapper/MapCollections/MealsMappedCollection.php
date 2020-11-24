@@ -7,17 +7,8 @@ use JsonSerializable;
 
 class MealsMappedCollection extends Collection implements MappedCollection
 {
-
-    public function __construct()
-    {
-        
-    }
-
-
     public function addToMap(JsonSerializable $jsonSerializable)
     {
         $this->add($jsonSerializable);
     }
 }
-
-?>

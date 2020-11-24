@@ -3,37 +3,25 @@
 namespace App\Http\Requests;
 
 use Carbon\Carbon;
-use Dotenv\Exception\ValidationException;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Arr;
-use Psy\Util\Str;
 
 class ListMeals extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize()
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules(): array
     {
         return [
-            'perPage' => [
+            'perPage'  => [
                 'nullable',
                 'int',
                 'min:1'
             ],
-            'page' => [
+            'page'     => [
                 'nullable',
                 'int',
                 'min:1'
@@ -42,28 +30,25 @@ class ListMeals extends FormRequest
                 'nullable',
                 'string'
             ],
-            'tags' => [
+            'tags'     => [
                 'nullable'
             ],
-            'tags.*' => [
+            'tags.*'   => [
                 'required',
                 'int',
                 'distinct'
             ],
-            'with' => [
+            'with'     => [
                 'nullable'
             ],
-            'with.*' => [
+            'with.*'   => [
                 'required',
-                'regex:(([a-zA-Z]+,*)+)',
-                'string',
-                'distinct'
+                Rule::in('category, tags, ingredients'),
             ],
-            'lang' => [
+            'lang'     => [
                 'bail',
                 'required',
-                'regex:(([a-zA-Z]+,*)+)',
-                'string'
+                Rule::in('hr', 'en', 'de')
             ],
             'diffTime' => [
                 'nullable',
@@ -74,49 +59,42 @@ class ListMeals extends FormRequest
         ];
     }
 
-
-
-
-    public function TagsWithMapper()
+    public function tagsWithMapper()
     {
-        $data['tags']=null;
-        $data['with']=null;
-        $data['diff_time']=null;
+        $data['tags'] = null;
+        $data['with'] = null;
+        $data['diff_time'] = null;
         if ($this->input('tags')) {
-            $data['tags'] = array_map('intval', explode(',', $this->input('tags')));
-        };
+            $data['tags'] = array_map(
+                'intval',
+                explode(',', $this->input('tags'))
+            );
+        }
 
         if ($this->input('with')) {
             $data['with'] = explode(',', $this->input('with'));
-        };
-
-        if ($this->input('diff_time'))
-        {
-            $data['diff_time'] = Carbon::createFromTimestamp($this->input('diff_time'))->format('Y-m-d H:i:s');
         }
 
+        if ($this->input('diff_time')) {
+            $data['diff_time'] = Carbon::createFromTimestamp(
+                $this->input('diff_time')
+            )->format('Y-m-d H:i:s');
+        }
         return $data;
     }
 
-    
-    
-
-    public function RequestChecker()
+    public function requestChecker()
     {
         $data = $this->TagsWithMapper();
-
-
         $requestData = [
-            'per_page'=> $this->input('per_page'),
-            'page'=> $this->input('page'),
-            'lang'=>$this->input('lang'),
-            'category' =>$this->input('category'),
-            'tags' => $data['tags'],
-            'with' => $data['with'],
+            'per_page'  => $this->input('per_page'),
+            'page'      => $this->input('page'),
+            'lang'      => $this->input('lang'),
+            'category'  => $this->input('category'),
+            'tags'      => $data['tags'],
+            'with'      => $data['with'],
             'diff_time' => $data['diff_time']
         ];
-
         return collect($requestData);
-
     }
 }

@@ -13,20 +13,14 @@ class Meals extends Model
     use HasFactory;
     use Translatable;
 
-    public $translatedAttributes =['title','description'];
+    public $translatedAttributes = ['title', 'description'];
+    protected $fillable = ['title', 'description', 'status'];
+    protected $hidden = [];
 
-    protected $fillable = ['title','description','status'];
-
-    protected $hidden =[];
-
-
-    
-
-    public function category(){
+    public function category()
+    {
         return $this->belongsTo(Category::class);
     }
-
-    
 
     public function tags()
     {
@@ -37,11 +31,4 @@ class Meals extends Model
     {
         return $this->belongsToMany(Ingredients::class);
     }
-
-}
-
-class MealsTranslation extends Model{
-
-    protected $fillable = ['title', 'description', 'status'];
-    public $timestamps=false;
 }

@@ -2,16 +2,9 @@
 
 namespace App\Mapper\MapCollections;
 
-
-
 use JsonSerializable;
 
-interface MappedCollection 
+interface MappedCollection
 {
-
     public function addToMap(JsonSerializable $jsonSerializable);
-
-
 }
-
-?>

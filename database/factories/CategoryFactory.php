@@ -7,18 +7,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CategoryFactory extends Factory
 {
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var string
-     */
     protected $model = Category::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array
-     */
     public function definition()
     {
         static $brojac = 1;
@@ -26,7 +16,7 @@ class CategoryFactory extends Factory
             'title:hr' => 'Naslov kategorije ' . $brojac . ' na HRV jeziku',
             'title:en' => 'Title of category ' . $brojac . ' on ENG language',
             'title:de' => 'Titel des kategorie ' . $brojac . ' in DEN sprache',
-            'slug' => 'category-' . $brojac++
+            'slug'     => 'category-' . $brojac++
         ];
     }
 }

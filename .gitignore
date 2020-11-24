@@ -1,0 +1,6 @@
+/vendor/
+.env
+Homestead.yaml
+Homestead.json
+/.vagrant
+
